@@ -10,49 +10,17 @@ import com.amazonaws.auth.policy.actions.SQSActions;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.rekognition.AmazonRekognition;
 import com.amazonaws.services.rekognition.AmazonRekognitionClientBuilder;
-import com.amazonaws.services.rekognition.model.CelebrityDetail;
-import com.amazonaws.services.rekognition.model.CelebrityRecognition;
-import com.amazonaws.services.rekognition.model.CelebrityRecognitionSortBy;
-import com.amazonaws.services.rekognition.model.ContentModerationDetection;
-import com.amazonaws.services.rekognition.model.ContentModerationSortBy;
-import com.amazonaws.services.rekognition.model.Face;
-import com.amazonaws.services.rekognition.model.FaceDetection;
-import com.amazonaws.services.rekognition.model.FaceMatch;
-import com.amazonaws.services.rekognition.model.FaceSearchSortBy;
-import com.amazonaws.services.rekognition.model.GetCelebrityRecognitionRequest;
-import com.amazonaws.services.rekognition.model.GetCelebrityRecognitionResult;
-import com.amazonaws.services.rekognition.model.GetContentModerationRequest;
-import com.amazonaws.services.rekognition.model.GetContentModerationResult;
-import com.amazonaws.services.rekognition.model.GetFaceDetectionRequest;
-import com.amazonaws.services.rekognition.model.GetFaceDetectionResult;
-import com.amazonaws.services.rekognition.model.GetFaceSearchRequest;
-import com.amazonaws.services.rekognition.model.GetFaceSearchResult;
 import com.amazonaws.services.rekognition.model.GetLabelDetectionRequest;
 import com.amazonaws.services.rekognition.model.GetLabelDetectionResult;
-import com.amazonaws.services.rekognition.model.GetPersonTrackingRequest;
-import com.amazonaws.services.rekognition.model.GetPersonTrackingResult;
 import com.amazonaws.services.rekognition.model.Instance;
 import com.amazonaws.services.rekognition.model.Label;
 import com.amazonaws.services.rekognition.model.LabelDetection;
 import com.amazonaws.services.rekognition.model.LabelDetectionSortBy;
 import com.amazonaws.services.rekognition.model.NotificationChannel;
 import com.amazonaws.services.rekognition.model.Parent;
-import com.amazonaws.services.rekognition.model.PersonDetection;
-import com.amazonaws.services.rekognition.model.PersonMatch;
-import com.amazonaws.services.rekognition.model.PersonTrackingSortBy;
 import com.amazonaws.services.rekognition.model.S3Object;
-import com.amazonaws.services.rekognition.model.StartCelebrityRecognitionRequest;
-import com.amazonaws.services.rekognition.model.StartCelebrityRecognitionResult;
-import com.amazonaws.services.rekognition.model.StartContentModerationRequest;
-import com.amazonaws.services.rekognition.model.StartContentModerationResult;
-import com.amazonaws.services.rekognition.model.StartFaceDetectionRequest;
-import com.amazonaws.services.rekognition.model.StartFaceDetectionResult;
-import com.amazonaws.services.rekognition.model.StartFaceSearchRequest;
-import com.amazonaws.services.rekognition.model.StartFaceSearchResult;
 import com.amazonaws.services.rekognition.model.StartLabelDetectionRequest;
 import com.amazonaws.services.rekognition.model.StartLabelDetectionResult;
-import com.amazonaws.services.rekognition.model.StartPersonTrackingRequest;
-import com.amazonaws.services.rekognition.model.StartPersonTrackingResult;
 import com.amazonaws.services.rekognition.model.Video;
 import com.amazonaws.services.rekognition.model.VideoMetadata;
 import com.amazonaws.services.sns.AmazonSNS;
@@ -78,18 +46,13 @@ public class VideoDetect {
     private static String sqsQueueArn = null;
     private static String startJobId = null;
     private static String bucket = null;
-    private static String video = null; 
+    private static String video = null;
     private static AmazonSQS sqs=null;
     private static AmazonSNS sns=null;
     private static AmazonRekognition rek = null;
 
-    private static NotificationChannel channel= new NotificationChannel()
-            .withSNSTopicArn(snsTopicArn)
-            .withRoleArn(roleArn);
-
-
     public static void main(String[] args) throws Exception {
-        
+
         video = "";
         bucket = "";
         roleArn = "";
@@ -98,30 +61,30 @@ public class VideoDetect {
         sns = AmazonSNSClientBuilder.standard().withCredentials(awsCreds).build();
         sqs= AmazonSQSClientBuilder.standard().withCredentials(awsCreds).build();
         rek = AmazonRekognitionClientBuilder.standard().withCredentials(awsCreds).build();
-  
+
         CreateTopicandQueue();
-        
+
         //=================================================
-        
+
         StartLabelDetection(bucket, video);
 
         if (GetSQSMessageSuccess()==true)
         	GetLabelDetectionResults();
-        
-       //=================================================  
-        
+
+       //=================================================
+
 
         DeleteTopicandQueue();
         System.out.println("Done!");
-       
+
     }
 
-    
+
     static boolean GetSQSMessageSuccess() throws Exception
     {
     	boolean success=false;
 
-   
+
         System.out.println("Waiting for job: " + startJobId);
         //Poll queue for messages
         List<Message> messages=null;
@@ -182,10 +145,10 @@ public class VideoDetect {
         System.out.println("Finished processing video");
         return success;
     }
-  
+
 
     private static void StartLabelDetection(String bucket, String video) throws Exception{
-    	
+
         NotificationChannel channel= new NotificationChannel()
                 .withSNSTopicArn(snsTopicArn)
                 .withRoleArn(roleArn);
@@ -202,9 +165,9 @@ public class VideoDetect {
 
         StartLabelDetectionResult startLabelDetectionResult = rek.startLabelDetection(req);
         startJobId=startLabelDetectionResult.getJobId();
-        
+
     }
-  
+
     private static void GetLabelDetectionResults() throws Exception{
 
         int maxResults=10;
@@ -240,10 +203,10 @@ public class VideoDetect {
                 long seconds=detectedLabel.getTimestamp();
                 Label label=detectedLabel.getLabel();
                 System.out.println("Millisecond: " + Long.toString(seconds) + " ");
-                
-                System.out.println("   Label:" + label.getName()); 
+
+                System.out.println("   Label:" + label.getName());
                 System.out.println("   Confidence:" + detectedLabel.getLabel().getConfidence().toString());
-      
+
                 List<Instance> instances = label.getInstances();
                 System.out.println("   Instances of " + label.getName());
                 if (instances.isEmpty()) {
@@ -267,9 +230,9 @@ public class VideoDetect {
             }
         } while (labelDetectionResult !=null && labelDetectionResult.getNextToken() != null);
 
-    } 
+    }
 
-    // Creates an SNS topic and SQS queue. The queue is subscribed to the topic. 
+    // Creates an SNS topic and SQS queue. The queue is subscribed to the topic.
     static void CreateTopicandQueue()
     {
         //create a new SNS topic
@@ -277,16 +240,16 @@ public class VideoDetect {
         CreateTopicRequest createTopicRequest = new CreateTopicRequest(snsTopicName);
         CreateTopicResult createTopicResult = sns.createTopic(createTopicRequest);
         snsTopicArn=createTopicResult.getTopicArn();
-        
+
         //Create a new SQS Queue
         sqsQueueName="AmazonRekognitionQueue" + Long.toString(System.currentTimeMillis());
         final CreateQueueRequest createQueueRequest = new CreateQueueRequest(sqsQueueName);
         sqsQueueUrl = sqs.createQueue(createQueueRequest).getQueueUrl();
         sqsQueueArn = sqs.getQueueAttributes(sqsQueueUrl, Arrays.asList("QueueArn")).getAttributes().get("QueueArn");
-        
+
         //Subscribe SQS queue to SNS topic
         String sqsSubscriptionArn = sns.subscribe(snsTopicArn, "sqs", sqsQueueArn).getSubscriptionArn();
-        
+
         // Authorize queue
           Policy policy = new Policy().withStatements(
                   new Statement(Effect.Allow)
@@ -295,12 +258,12 @@ public class VideoDetect {
                   .withResources(new Resource(sqsQueueArn))
                   .withConditions(new Condition().withType("ArnEquals").withConditionKey("aws:SourceArn").withValues(snsTopicArn))
                   );
-                  
+
 
           Map<String, String>  queueAttributes = new HashMap<String, String>();
           queueAttributes.put(QueueAttributeName.Policy.toString(), policy.toJson());
-          sqs.setQueueAttributes(new SetQueueAttributesRequest(sqsQueueUrl, queueAttributes)); 
-        
+          sqs.setQueueAttributes(new SetQueueAttributesRequest(sqsQueueUrl, queueAttributes));
+
 
          System.out.println("Topic arn: " + snsTopicArn);
          System.out.println("Queue arn: " + sqsQueueArn);
@@ -313,7 +276,7 @@ public class VideoDetect {
             sqs.deleteQueue(sqsQueueUrl);
             System.out.println("SQS queue deleted");
         }
-        
+
         if (sns!=null) {
             sns.deleteTopic(snsTopicArn);
             System.out.println("SNS topic deleted");
