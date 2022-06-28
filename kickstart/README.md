@@ -74,5 +74,30 @@ https://aka.ms/maven_webapp_runtime#webcontain
 
 昨天参考上述 medium 的博客，使用代码方式部署到 App Service，一直不行。
 
+## 以 Docker 镜像方式部署到 App Service
 今天再试一下官方文档，使用 Docker 模式部署。推送到 ACR 有个额外的好处，未来还能从这里再部署到 AKS。
 https://docs.microsoft.com/en-us/azure/developer/java/spring-framework/deploy-spring-boot-java-app-on-linux
+
+文档中下面这行命令其实是2条
+```
+az acr login -n RegistryName && mvn compile jib:build
+```
+我分开来执行
+```
+az acr login -n RegistryName
+```
+报错
+```
+You may want to use 'az acr login -n RegistryName --expose-token' to get an access token, which does not require Docker to be installed.
+```
+那就按提示加上  `--expose-token` 参数呗。
+```
+az acr login -n RegistryName --expose-token
+```
+
+再执行就成了。最后记得先把本地Docker Desktop 运行起来，再执行
+
+```
+mvn compile jib:build
+```
+否则会报错验证失败。

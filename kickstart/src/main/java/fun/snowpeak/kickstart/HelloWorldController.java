@@ -24,10 +24,10 @@ public class HelloWorldController {
 
         String clientIp = IpUtil.getIpAddress(request);
         StringBuilder sb = new StringBuilder();
-        sb.append("Homepage.  Current time is ")
+        sb.append("<h1>Homepage</h1> <p> Current time is ")
         .append(dateTimeStr).append(". Your IP is ")
         .append(clientIp)
-        .append(".<p><a href=\"/hello\">hello</a></p>");
+        .append(".</p><p><a href=\"/hello\">hello</a></p>");
         return sb.toString();
 	}
 
