@@ -20,8 +20,11 @@ public class HelloController {
         sdf.setTimeZone(TimeZone.getTimeZone("GMT+8"));
         String dateTimeStr = sdf.format(date);
 
+        String clientIp = IpUtil.getIpAddress(request);
         StringBuilder sb = new StringBuilder();
-        sb.append("<h1>Homepage</h1> <p> Current time is ").append(dateTimeStr)
+        sb.append("<h1>Homepage</h1> <p> Current time is ")
+        .append(dateTimeStr).append(". Your IP is ")
+        .append(clientIp)
         .append(".</p><p><a href=\"/hello\">hello</a></p>");
         return sb.toString();
 	}

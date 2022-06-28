@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-hello
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: spring-hello
+  template:
+    metadata:
+      labels:
+        app: spring-hello
+    spec:
+      containers:
+      - name: spring-hello
+        image: snowpeak.azurecr.cn/spring-hello:0.3
+        ports:
+        - containerPort: 80
