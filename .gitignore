@@ -27,3 +27,5 @@ hs_err_pid*
 /demo/.classpath
 /aws_sdk_demo/.settings
 /aws_sdk_demo/*.project
+/aws_sdk_demo/*.classpath
+/kickstart/.mvn
