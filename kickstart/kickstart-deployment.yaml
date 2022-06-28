@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: springkickstart
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: springkickstart
+  template:
+    metadata:
+      labels:
+        app: springkickstart
+    spec:
+      containers:
+      - name: springkickstart
+        image: snowpeak.azurecr.cn/kickstart:0.1
+        ports:
+        - containerPort: 80

@@ -101,3 +101,39 @@ az acr login -n RegistryName --expose-token
 mvn compile jib:build
 ```
 否则会报错验证失败。
+
+推送到ACR 终于成功，但是部署到 Azure App Service 或 Azure Kubernetes Service 都不行。App Service 报错不能拉起镜像。AKS 中 pod 日志显示
+```
+Error: Could not find or load main class fun.snowpeak.kickstart.KickstartApplication
+
+```
+
+## 自己手工构建 Docker 镜像
+docker build -f SpringKickstart.Dockerfile -t kickstart:latest -t kickstart:0.1 .
+
+docker run -d -p 8080:80 --name kickstart kickstart
+
+运行不了，查看一下日志
+```
+docker logs kickstart
+Exception in thread "main" java.lang.UnsupportedClassVersionError: fun/snowpeak/kickstart/KickstartApplication has been compiled by a more recent version of the Java Runtime (class file version 62.0), this version of the Java Runtime only recognizes class file versions up to 55.0
+        at java.base/java.lang.ClassLoader.defineClass1(Native Method)
+
+```
+Dockerfile 中基础镜像必须和 Spring Boot 项目选择的 JDK 版本一致。把之前的  `FROM openjdk:11`  改成  `FROM openjdk:18`  就好了。
+
+## 推送到 Azure Container Registry
+
+然后推送到 Azure 中国区的 Container Registry
+```
+az cloud set -n AzureChinaCloud
+az login
+az acr login --name snowpeak
+docker tag kickstart:0.1 snowpeak.azurecr.cn/kickstart:0.1
+docker push snowpeak.azurecr.cn/kickstart:0.1
+docker tag kickstart:0.1 snowpeak.azurecr.cn/kickstart:latest
+docker push snowpeak.azurecr.cn/kickstart:latest
+```
+
+## TODO
+发现 openjdk 基础镜像太大。计划改成用 tomcat 做基础镜像，但是得改 Spring Boot 项目的整体配置。
