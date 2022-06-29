@@ -135,5 +135,6 @@ docker tag kickstart:0.1 snowpeak.azurecr.cn/kickstart:latest
 docker push snowpeak.azurecr.cn/kickstart:latest
 ```
 
-## TODO
+## 精简 docker 镜像体积
 发现 openjdk 基础镜像太大。计划改成用 tomcat 做基础镜像，但是得改 Spring Boot 项目的整体配置。
+目前的测试是 SpringKickstart.Dockerfile 文件中 FROM openjdk:18 换成了 FROM openjdk:18-slim，构建的 docker 镜像体积减小到了 427.72MB。另一个项目尝试用 war 包打包和基于 Tomcat 构建的镜像，体积是 309.75MB，虽然war 包的方式更配置起来更繁琐，但是体积精简得还是比较明显的。
