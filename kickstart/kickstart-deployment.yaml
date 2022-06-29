@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
       - name: springkickstart
-        image: snowpeak.azurecr.cn/kickstart:0.2
+        image: snowpeak.azurecr.cn/kickstart:latest
         ports:
         - containerPort: 80

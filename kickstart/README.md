@@ -111,7 +111,7 @@ Error: Could not find or load main class fun.snowpeak.kickstart.KickstartApplica
 ## 自己手工构建 Docker 镜像
 docker build -f SpringKickstart.Dockerfile -t kickstart:latest -t kickstart:0.1 .
 
-docker run -d -p 8080:80 --name kickstart kickstart
+docker run -d -p 80:80 --name kickstart kickstart
 
 运行不了，查看一下日志
 ```
@@ -138,3 +138,41 @@ docker push snowpeak.azurecr.cn/kickstart:latest
 ## 精简 docker 镜像体积
 发现 openjdk 基础镜像太大。计划改成用 tomcat 做基础镜像，但是得改 Spring Boot 项目的整体配置。
 目前的测试是 SpringKickstart.Dockerfile 文件中 FROM openjdk:18 换成了 FROM openjdk:18-slim，构建的 docker 镜像体积减小到了 427.72MB。另一个项目尝试用 war 包打包和基于 Tomcat 构建的镜像，体积是 309.75MB，虽然war 包的方式更配置起来更繁琐，但是体积精简得还是比较明显的。
+
+# Azure DevOps 自动化
+## Pipelines 打包流水线
+报错
+```
+2022-06-29T02:55:27.7870029Z [ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.10.1:compile (default-compile) on project kickstart: Fatal error compiling: invalid target release: 18 -> [Help 1]
+
+```
+这是因为我的项目选择了当前最新的 Java 18 版，而 Azure Pipelines 中默认的环境可能比这个版本低。
+先在 pipeline.yml 中添加一个 bash 任务，输出一下环境的情况。
+```yaml
+steps:
+- bash: |
+     mvn -v
+```
+看运行结果为
+```
+/usr/bin/bash /home/vsts/work/_temp/fd78d055-8e8c-467a-8d18-3e04e6eceefd.sh
+Apache Maven 3.8.6 (84538c9988a25aec085021c365c560670ad80f63)
+Maven home: /usr/share/apache-maven-3.8.6
+Java version: 11.0.15, vendor: Eclipse Adoptium, runtime: /usr/lib/jvm/temurin-11-jdk-amd64
+Default locale: en, platform encoding: UTF-8
+OS name: "linux", version: "5.13.0-1031-azure", arch: "amd64", family: "unix"
+```
+
+添加一个安排指定 Java 版本的任务！
+
+```yaml
+- task: JavaToolInstaller@0
+    inputs:
+      versionSpec: "18"
+      jdkArchitectureOption: x64
+      jdkSourceOption: LocalDirectory
+      jdkFile: "/builds/openjdk-11.0.2_linux-x64_bin.tar.gz"
+      jdkDestinationDirectory: "/jdk-18_linux-x64_bin.tar.gz"
+      cleanDestinationDirectory: true
+```
+但是需要把这个安装包添加到 GitHub 源码库里，而 GitHub 现在上传文件最大100MB，不能上传这个170MB的 Java 安装包。安装不了，回来改项目配置吧。改 pom.xml 中的`<java.version>11</java.version>`，和 SpringKickstart.Dockerfile 中的 `FROM openjdk:11-slim`。再重新打包和构建一遍。
